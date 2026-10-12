@@ -24,6 +24,15 @@ pub struct Image {
 
 pub const DLEXT: &str = if cfg!(target_os = "macos") { "dylib" } else if cfg!(windows) { "dll" } else { "so" };
 
+/// The native library next to a pkgimage's `.ji`, also when it was built for another OS.
+pub fn native_sibling(ji: &Path) -> PathBuf {
+    [DLEXT, "so", "dylib", "dll"]
+        .iter()
+        .map(|e| ji.with_extension(e))
+        .find(|p| p.exists())
+        .unwrap_or_else(|| ji.with_extension(DLEXT))
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 fn map_file(p: &Path) -> Result<Blob> {
     let f = std::fs::File::open(p).with_context(|| format!("opening {}", p.display()))?;
@@ -116,7 +125,7 @@ impl Image {
         }
         let ji = map_file(&path)?;
         let (base, _) = header::parse_base(&ji).with_context(|| format!("reading {}", path.display()))?;
-        let so = path.with_extension(DLEXT);
+        let so = native_sibling(&path);
         let (native_path, native) = if so.exists() {
             (Some(so.clone()), Some(map_file(&so)?))
         } else {

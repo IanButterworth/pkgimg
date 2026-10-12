@@ -182,7 +182,7 @@ fn scan_compiled(compiled: &Path, root: usize, out: &mut Vec<CacheFile>) {
                     continue;
                 }
                 let Ok(md) = f.metadata() else { continue };
-                let so = ji.with_extension(crate::image::DLEXT);
+                let so = crate::image::native_sibling(&ji);
                 let native_size = std::fs::metadata(&so).map(|m| m.len()).ok();
                 out.push(CacheFile {
                     package: package.clone(),
@@ -210,7 +210,7 @@ fn scan_flat(dir: &Path, root: usize, out: &mut Vec<CacheFile>) {
             continue;
         }
         let Ok(md) = f.metadata() else { continue };
-        let so = ji.with_extension(crate::image::DLEXT);
+        let so = crate::image::native_sibling(&ji);
         let native_size = std::fs::metadata(&so).map(|m| m.len()).ok();
         out.push(CacheFile {
             package: package.clone(), julia: julia.clone(), native: native_size.is_some().then_some(so), ji,
